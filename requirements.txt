@@ -56,3 +56,4 @@ zstandard==0.25.0
 langchain_core
 uvicorn
 langgraph
+langchain_chroma

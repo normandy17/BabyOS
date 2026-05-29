@@ -124,3 +124,4 @@ strictyaml==1.7.3
 supabase==2.30.0
 supabase-auth==2.30.0
 supabase-functions==2.30.0
+fastapi

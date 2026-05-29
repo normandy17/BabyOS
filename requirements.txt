@@ -97,7 +97,7 @@ uuid-utils==0.16.0
     # via
     #   langchain-core
     #   langsmith
-websockets==16.0
+# websockets==16.0
     # via langsmith
 xxhash==3.7.0
     # via
@@ -112,7 +112,7 @@ langchain_chroma
 langchain_openai
 langchain_community
 langchain
-# websockets==15.0.1
+websockets==15.0.1
 yarl==1.24.2
 typing_extensions==4.15.0
 rich==14.3.4

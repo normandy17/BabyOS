@@ -455,8 +455,16 @@ class UniversalBabyOSRetriever:
         unfiltered_pool = self._dense_retrieve(embed_query, metadata_filter=None, k=40)
         sparse_docs     = self._sparse_retrieve(query, unfiltered_pool)
 
-        # ── 5. Combine + deduplicate ───────────────────────────────────────────
+        # ── 5a. Combine + deduplicate ───────────────────────────────────────────
         combined = self._deduplicate(dense_docs + sparse_docs)
+        
+        # ── 5b. yt enforcer ───────────────────────────────────────────
+        yt_docs = [d for d in combined if d.metadata.get("source_type") == "youtube"]
+        non_yt  = [d for d in combined if d.metadata.get("source_type") != "youtube"]
+        if yt_docs:
+            # Take the top YouTube doc and force it into the reranker input
+            # regardless of its embedding score
+            combined = non_yt + yt_docs[:2]
 
         # ── 6. Rerank ──────────────────────────────────────────────────────────
         if self.use_reranker and combined:

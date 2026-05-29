@@ -164,15 +164,12 @@ class DocumentAnalyzeRequest(BaseModel):
 
 def _get_or_create_profile(sb: Client, user_id: str, email: str) -> dict:
     """Fetch profile from Supabase; create default if first login."""
-    print("profileasd", user_id, email)
     if(True):
         res=None
         res = sb.table("profiles").select("*").eq("id", user_id).execute()
         if res.data:
             return res.data[0]
 
-        print("could not fetch profile details")
-        print("qwe", user_id, email)
     # First login — create minimal profile
         profile = {
             "id":                   user_id,

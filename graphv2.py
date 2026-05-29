@@ -187,67 +187,6 @@ def maybe_vision_node(state: BabyOSState) -> dict:
 
 
 
-# # ── Node 4: retriever_node ────────────────────────────────────────────────────
-
-# def retriever_node(state: BabyOSState) -> dict:
-#     """
-#     Runs AFTER supervisor so routed_topic is already in run_metadata.
-#     Calls BabyOSRetriever.retrieve() with topic + period filter.
-#     Writes retrieved_context and retrieved_sources into state.
-#     """
-#     query = state["current_query"]
-#     week  = state["current_week"]
-#     pp    = state["postpartum_weeks"]
-#     role  = state["user_role"]
-#     phase = state["current_phase"]
-
-#     if not query.strip():
-#         return {"retrieved_context": "", "retrieved_sources": []}
-
-#     # Get topic hint set by supervisor
-#     run_meta     = state.get("run_metadata", {})
-#     routed_topic = run_meta.get("routed_topic")
-
-#     # Derive period from week or postpartum weeks
-#     from rag.taxonomy import week_to_pregnancy_month, postpartum_weeks_to_period
-#     if pp > 0:
-#         period  = postpartum_weeks_to_period(pp)
-#         section = "postpartum"
-#         # Prefix query with postpartum context for better embedding
-#         effective_query = f"[postpartum {round(pp/4.33,1)} months] {query}"
-#     else:
-#         period  = week_to_pregnancy_month(week) if week else None
-#         section = "pregnancy"
-#         effective_query = query
-
-#     try:
-#         retriever = _get_retriever()
-#         docs      = retriever.retrieve(
-#             query=effective_query,
-#             topic=routed_topic,
-#             period=period,
-#             section=section,
-#             week=week if pp == 0 else None,
-#             role=role,
-#             phase=phase,
-#         )
-#         context = retriever.format_context(docs)
-#         sources = list({
-#             d.metadata.get("source_name", d.metadata.get("source_file", "?"))
-#             for d in docs
-#         })
-#     except Exception as e:
-#         print(f"[retriever_node] Warning: {e}")
-#         context = "Knowledge base temporarily unavailable."
-#         sources = []
-
-#     return {
-#         "retrieved_context": context,
-#         "retrieved_sources": sources,
-#     }
-
-
-
 # ── Node 4: retriever_node ────────────────────────────────────────────────────
 
 def retriever_node(state: BabyOSState) -> dict:
@@ -318,20 +257,20 @@ def retriever_node(state: BabyOSState) -> dict:
         retriever = _get_retriever()
 
         # Primary retrieval
-        # docs = retriever.retrieve(
-        #     query=effective_query,
-        #     topic=routed_topic,
-        #     period=period,
-        #     section=section,
-        #     week=week if postpartum_weeks == 0 else None,
-        # )
-        docs = retriever.debug_query(
+        docs = retriever.retrieve(
             query=effective_query,
             topic=routed_topic,
             period=period,
             section=section,
             week=week if postpartum_weeks == 0 else None,
         )
+        # docs = retriever.debug_query(
+        #     query=effective_query,
+        #     topic=routed_topic,
+        #     period=period,
+        #     section=section,
+        #     week=week if postpartum_weeks == 0 else None,
+        # )
 
         # Fallback retrieval if filters over-constrain
         if not docs:
@@ -459,15 +398,7 @@ def build_graph():
     builder.add_edge("input_node",      "vision_node")
     builder.add_edge("vision_node",     "supervisor_node")   # ← supervisor BEFORE retriever
     builder.add_edge("supervisor_node", "retriever_node")    # ← retriever uses supervisor's topic
-    # builder.add_edge("retriever_node",  "supervisor_node")   # ← this line is WRONG, see below
 
-    # Oops — remove that last line. Conditional edge from retriever:
-    # Actually: conditional edge is FROM supervisor, not retriever.
-    # Retriever always leads to the conditional agent dispatch.
-    # Let's fix the wiring properly:
-
-    # The graph is:
-    #   retriever_node → conditional(next_agent) → one of the agents → output_node
     builder.add_conditional_edges(
         "retriever_node",
         route_to_agent,
@@ -512,13 +443,6 @@ def get_graph():
         _graph = build_graph()
     return _graph
 
-from IPython.display import Image, display
-
-
-graph=get_graph()
-display(Image(graph.get_graph().draw_mermaid_png()))
-
-
 
 # ── Public chat() entry point — called by backend/main.py ─────────────────────
 
@@ -543,7 +467,6 @@ def chat(
     Returns:
         (response_text, updated_state)
     """
-    print("CP8", message)
     
     graph  = get_graph()
     config = {"configurable": {"thread_id": thread_id}}
@@ -556,14 +479,11 @@ def chat(
 
     # Inject image if provided
     if image_b64:
-        print("CP5 injerct image")
         input_state["uploaded_image_b64"]  = image_b64
         input_state["uploaded_image_type"] = image_type or "other"
 
     result = graph.invoke(input_state, config=config)
-    # print("CP7", result)
     if image_b64:
-        print("CP9", result["last_document_analysis"]["raw_summary"])
         return result["last_document_analysis"]["raw_summary"], result
         
     return result["agent_response"], result
@@ -576,54 +496,3 @@ user_profile={
     }
 
 init_state = make_initial_state(user_profile)
-
-
-
-
-
-
-# response = chat(
-#     message="Is it normal to feel short of breath during pregnancy",
-#     state=init_state
-# )
-
-# print(response)
-
-
-# # debug#1
-
-# QSTN_TEST=[
-#     "Is it normal to feel short of breath during pregnancy",
-#     "Is itching with discharge normal or dangerous",
-#     "Why does vaginal discharge increase in pregnancy",
-#     "How much coffee is allowed in pregnancy per day",
-#     "Is it safe to fly during pregnancy",
-#     "Why do my feet and ankles swell in pregnancy",
-#     "Why do i get blurry vision or nausea with low bp",
-#     "Why do i have moodswings",
-#     "Is L4,l5 backpain is normal in pregnancy",
-#     "Is physiotherapy safe during pregnancy",
-#     "Can baby position affect nerve pain",
-#     "Can i take painkillers during prgnancy",
-#     "Could low oxygen levels permanently affect the baby",
-#     "Could spinal problems worsen during pregnancy",
-#     "What causes premature birth",
-#     "Could low Bp affect the baby's growth",
-#     "Is Sex safe during Pregnancy",
-#     "How can i support my partner",
-#     "what kind of foods can i eat",
-#     "What should dads prepare during week 30?"
-# ]
-
-# for q in QSTN_TEST:
-#     response = chat(
-#     message=q,
-#     state=init_state
-#     )   
-#     print(response)
-#     print("------------------------------------------------------------------------")
-
-
-
-
-

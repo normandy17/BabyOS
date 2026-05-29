@@ -47,7 +47,6 @@ def _keyword_danger_check(query: str) -> bool:
 
 
 def supervisor_node(state: BabyOSState) -> dict:
-    if(DEBUG_MODE): print('Entering supervisor mode')    
     query  = state["current_query"]
     role   = state["user_role"]
     phase  = state["current_phase"]
@@ -57,7 +56,6 @@ def supervisor_node(state: BabyOSState) -> dict:
 
     # 1. Fast danger check
     if _keyword_danger_check(query):
-        if(DEBUG_MODE): print('Found Danger Keyword: Running Medical Agent')
         return {
             "next_agent":    "medical_agent",
             "danger_flag":   True,
@@ -67,7 +65,6 @@ def supervisor_node(state: BabyOSState) -> dict:
 
     # 2. Hebamme role always goes to hebamme_agent (they need clinical view)
     if role == "hebamme":
-        if(DEBUG_MODE): print('Running hebamme agent')
         return {
             "next_agent":   "hebamme_agent",
             "danger_flag":  False,
@@ -116,7 +113,6 @@ Which agent?"""
     chosen   = response.content.strip().lower().replace(".", "")
     if chosen not in VALID_AGENTS:
         chosen = "medical_agent"
-    if(DEBUG_MODE): print('Exiting supervisor mode: chose ', chosen)
     return {
         "next_agent":   chosen,
         "danger_flag":  False,

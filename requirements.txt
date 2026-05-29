@@ -127,3 +127,4 @@ supabase-functions==2.30.0
 fastapi
 ddgs
 IPython
+rank_bm25

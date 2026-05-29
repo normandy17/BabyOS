@@ -247,7 +247,6 @@ def vision_node(state: BabyOSState) -> dict:
     """
     image_b64   = state.get("uploaded_image_b64")
     image_type  = state.get("uploaded_image_type", "other")
-    # print("CP", image_b64)
     if not image_b64:
         return {}   # Nothing to do — no image uploaded
 
@@ -280,9 +279,7 @@ def vision_node(state: BabyOSState) -> dict:
             if raw.startswith("json"):
                 raw = raw[4:]
         raw = raw.strip()
-        print("CP4", raw)
         parsed: dict = json.loads(raw)
-        print("CP2", response.content if 'response' in dir() else f"Analysis failed: {e}")
         analysis: DocumentAnalysis = {
             "doc_type":      parsed.get("doc_type", doc_type),
             "week_detected": parsed.get("week_detected"),
@@ -294,7 +291,6 @@ def vision_node(state: BabyOSState) -> dict:
         }
     except (json.JSONDecodeError, Exception) as e:
         # Graceful fallback — store raw text as summary
-        print("CP3",response.content if 'response' in dir() else f"Analysis failed: {e}")
         analysis: DocumentAnalysis = {
             "doc_type":      doc_type,
             "week_detected": None,

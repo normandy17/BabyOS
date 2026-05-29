@@ -59,3 +59,4 @@ langgraph
 langchain_chroma
 langchain_openai
 langchain_community
+langchain

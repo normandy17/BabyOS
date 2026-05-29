@@ -55,3 +55,4 @@ yarl==1.24.2
 zstandard==0.25.0
 langchain_core
 uvicorn
+langgraph

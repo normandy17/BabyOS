@@ -57,3 +57,4 @@ langchain_core
 uvicorn
 langgraph
 langchain_chroma
+langchain_openai

@@ -53,4 +53,4 @@ urllib3==2.7.0
 websockets==15.0.1
 yarl==1.24.2
 zstandard==0.25.0
-uvicorn
+langchain_core

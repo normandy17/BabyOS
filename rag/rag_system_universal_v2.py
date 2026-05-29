@@ -48,7 +48,7 @@ COHERE_API_KEY = os.getenv("COHERE_API_KEY")
 
 # Source weights: higher = more trusted. Applied as multiplier on rerank score.
 SOURCE_WEIGHTS = {
-    "WHO":         1.00,
+    "WHO":         0.99,
     "NHS":         0.98,
     "CDC":         0.95,
     "ACOG":        0.95,
@@ -60,7 +60,7 @@ SOURCE_WEIGHTS = {
     "json":        0.82,
     "markdown":    0.78,
     "web":         0.72,
-    "youtube":     0.68,
+    "youtube":     1.00,
 }
 
 DEFAULT_SOURCE_WEIGHT = 0.70
